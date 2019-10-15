@@ -1,40 +1,43 @@
 package com.example.fancy_lightcontrols;
-
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.Set;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
-    BluetoothAdapter mBluetoothAdapter = null;
-    Button btnPaired;
-    ListView devicelist;
-    Set<BluetoothDevice> pairedDevices;
+    BluetoothSocket btSocket;
+    ImageView btImage;
+    ImageView animImage;
+    AnimationDrawable animationDrawable;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final Context context = this;
+        btImage = findViewById(R.id.btConnected);
+        updateConnectionImage(btSocket);
 
+        animImage = findViewById(R.id.effects_demo);
+        animImage.setBackgroundResource(R.drawable.butt_anim);
+        animationDrawable = (AnimationDrawable) animImage.getBackground();
+        ImageView sendImage = findViewById(R.id.goto_send_data);
+        TextView sendImage_label = findViewById(R.id.butt_sett_command);
 
-        btnPaired = findViewById(R.id.pairedDevicesButton);
+        sendImage.setOnClickListener(image_text_Click);
+        sendImage_label.setOnClickListener(image_text_Click);
 
-        // Getting Bluetooth adapter
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Data.setContext(this);
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null){
             Toast.makeText(this, "Bluetooth device error!", Toast.LENGTH_SHORT).show();
             finish();
@@ -47,53 +50,81 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(turnBTon,1);
             }
         }
-        btnPaired.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                pairedDevicesList(); //method that will be called
-            }
-        });
-
-
-
-    }
-    private void pairedDevicesList()
-    {
-        AdapterView.OnItemClickListener myListClickListener = new AdapterView.OnItemClickListener()
-        {
-            public void onItemClick (AdapterView av, View v, int arg2, long arg3)
-            {
-                // Get the device MAC address, the last 17 chars in the View
-                String info = ((TextView) v).getText().toString();
-                String address = info.substring(info.length() - 17);
-                // Make an intent to start next activity.
-                Intent i = new Intent(MainActivity.this, led_control.class);
-                //Change the activity.
-                i.putExtra("address", address); //this will be received at ledControl (class) Activity
-                startActivity(i);
-            }
-        };
-        pairedDevices = mBluetoothAdapter.getBondedDevices();
-        ArrayList list = new ArrayList();
-
-        if (pairedDevices.size()>0)
-        {
-
-            for(BluetoothDevice bt : pairedDevices)
-            {
-                list.add(bt.getName() + "\n" + bt.getAddress()); //Get the device's name and the address
+        String btAddress;
+        try {
+            btAddress = Data.getLastConnectedAddress();
+        }catch (Exception e){ btAddress = ""; }
+        if (!btAddress.equals("")){
+            BluetoothDevice btDevice = mBluetoothAdapter.getRemoteDevice(btAddress);
+            try {
+                ConnectBT con = new ConnectBT(mBluetoothAdapter, context, Data.getLastConnectedAddress(), btImage);
+                con.execute();
+            }catch (Exception e){
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
-        else {
-            Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.", Toast.LENGTH_LONG).show();
+        btSocket = Data.getBtSBackup();
+    }
+    View.OnClickListener image_text_Click = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            try {
+                if (view.getId() == R.id.butt_sett_command || view.getId() == R.id.goto_send_data) {
+                    Intent intent = new Intent(getApplicationContext(), led_control.class);
+                    startActivity(intent);
+                }
+            } catch (Exception e) {
+                Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         }
-        devicelist = findViewById(R.id.device_list);
-        final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, list);
-        devicelist.setAdapter(adapter);
-        devicelist.setOnItemClickListener(myListClickListener);
-
+    };
+    public void goToPreferences(View v){
+        Intent intent = new Intent(v.getContext(), PreferencesActivity.class);
+        startActivity(intent);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateConnectionImage(btSocket);
+    }
 
+    void updateConnectionImage(BluetoothSocket btSocket){
+        btSocket = Data.getBtSBackup();
+        if (btSocket != null){
+            if(btSocket.isConnected()){
+                btImage.setImageResource(R.drawable.ic_bluetooth_connected);
+            }else{
+                btImage.setImageResource(R.drawable.ic_bluetooth_disconnected);
+            }
+        }else{
+            btImage.setImageResource(R.drawable.ic_bluetooth_disconnected);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(btSocket != null)
+        Disconnect();
+        super.onDestroy();
+    }
+
+    void Disconnect(){
+        if (btSocket!=null) //If the btSocket is busy
+        {
+            try
+            {
+                btSocket.close(); //close connection
+            }
+            catch (IOException e) {
+                Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+            animationDrawable.start();
+    }
 }

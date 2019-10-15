@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/ic_3led_off"
+        android:duration="1300"
+        />
+    <item android:drawable="@drawable/ic_3led_rgb"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_brg"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_gbr"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_off"
+        android:duration="1300"
+        />
+    <item android:drawable="@drawable/ic_3led_g00"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_gg0"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_ggg"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_0gg"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_00g"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_off"
+        android:duration="1300"
+        />
+    <item android:drawable="@drawable/ic_3led_g00"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_gg0"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_0gg"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_00g"
+        android:duration="750"
+        />
+    <item android:drawable="@drawable/ic_3led_off"
+        android:duration="1300"
+        />
+    <item android:drawable="@drawable/ic_3led_off"
+        android:duration="1300"
+        />
+</animation-list>
